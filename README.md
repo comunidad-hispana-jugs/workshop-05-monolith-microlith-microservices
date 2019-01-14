@@ -43,5 +43,5 @@ La capa de negocio comunmente la hemos desarrollado usando Enterprise Java Beans
 
 ### Levantar Openliberty y correr una aplicacion Simple
 
-Vamos a crear una aplicacion desde 0 y aprederas a configurar una aplicacion   
+Vamos a crear una aplicacion JAX-RS desde 0 y aprederas las consideraciones principales para configurar una aplicacion sobre Open Liberty.  
 
