@@ -236,6 +236,7 @@ public class GroupRestTest {
         response.close();
     }
 }
+``
 
 Esta clase de prueba tiene más líneas de código que la implementación del recurso. Esta situación es común. El método de prueba se indica con la anotación @Test. El código de prueba necesita saber alguna información sobre la aplicación para poder hacer solicitudes. El puerto del servidor y la raíz del contexto de la aplicación son clave, y están dictados por la configuración del servidor. 
 
