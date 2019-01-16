@@ -24,7 +24,7 @@ Open Liberty es un servidor de aplicaciones diseñado para la nube. Es pequeño,
 
 Maven es una herramienta de creación de automatización que proporciona una forma eficiente de desarrollar aplicaciones Java. Usando Maven, vamos construir nuestros servicios. A continuación, realizará la configuración del servidor y los cambios de código y verá cómo los recoge un servidor en ejecución. También explorará cómo empaquetar su aplicación con el tiempo de ejecución del servidor para que se pueda implementar en cualquier lugar de una sola vez. Finalmente, empaquetaremos la aplicación junto con la configuración del servidor en una imagen Docker y la ejecutará como un contenedor.
 
-###Notas:
+### Notas:
 
 El repositorio esta compuesto por un proyecto que puede ser desplegado como monolito, microlito o microservicios; ademas en los primeros laboratorios vamos a crear aplicaciones simples sin necesidad del codigo pre elaborado. El inicio del taller comienza con el archivo readme.md que contine un resumen del trabajo a realizar. 
 
