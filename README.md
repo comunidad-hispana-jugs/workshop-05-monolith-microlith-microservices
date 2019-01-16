@@ -39,9 +39,93 @@ La capa web es desarrollada usando Java Server Faces u en los ultimos años se u
 
 La capa de negocio comunmente la hemos desarrollado usando Enterprise Java Beans y la Capa de pesistencia Java Persistence Api y  dia a dia utilizamos estas especificaciones / apis acompanado  del servidor de aplicaciones de su preferencia (JBOSS, WEBSPHERE, WEBLOGIC, Others) que lo implementa. 
 
+A continuacion vamos a crear un monolito simple en el laboratorio 1 y seguiremos con una aplicacion con codigo pre listo para explicar conceptos de la nueva ola de desarrollo de aplicaciones Empresariales con Java:
+
 ## Laboratorio 1
 
 ### Levantar Openliberty y correr una aplicacion Simple
 
-Vamos a crear una aplicacion JAX-RS desde 0 y aprederas las consideraciones principales para configurar una aplicacion sobre Open Liberty.  
+Vamos a crear una aplicacion JAX-RS desde 0 y aprederas las consideraciones principales para configurar una aplicacion sobre Open Liberty.
 
+### Creando una aplicación JAX-RS 
+
+Crearemos una clase de aplicación JAX-RS en el archivo src/main/java/io/openliberty/guides/rest/SystemApplication.java:
+
+``
+package io.openliberty.guides.rest;
+
+import javax.ws.rs.core.Application;
+import javax.ws.rs.ApplicationPath;
+
+@ApplicationPath("System")
+public class SystemApplication extends Application {
+
+}
+``
+
+La clase SystemApplication extiende la clase Application, que a su vez asocia todas las clases de recursos JAX-RS del archivo WAR con esta aplicación JAX-RS, haciéndolas disponibles bajo la ruta común especificada en la clase SystemApplication. La anotación @ApplicationPath tiene un valor que indica la ruta dentro de la WAR de la que la aplicación JAX-RS acepta peticiones.
+
+### Creando un recurso JAX-RS 
+
+En JAX-RS, una sola clase debe representar un solo recurso o un grupo de recursos del mismo tipo. En esta aplicación, un recurso puede ser una propiedad del sistema o un conjunto de propiedades del sistema. Es fácil tener una sola clase que maneje múltiples recursos diferentes, pero mantener una separación limpia entre los tipos de recursos ayuda a mantener la capacidad de mantenimiento a largo plazo.
+
+Cree la clase de recurso JAX-RS en el archivo src/main/java/io/openliberty/guides/rest/PropertiesResource.java:
+
+``
+package io.openliberty.guides.rest;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("properties")
+public class PropertiesResource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject getProperties() {
+
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+
+        System.getProperties()
+              .entrySet()
+              .stream()
+              .forEach(entry -> builder.add((String)entry.getKey(),
+                                            (String)entry.getValue()));
+
+       return builder.build();
+    }
+}
+``
+
+Esta clase de recurso tiene bastante código, así que vamos a dividirlo en trozos manejables.
+
+La anotación @Path en la clase indica que este recurso responde a la ruta de propiedades en la aplicación JAX-RS. La anotación @ApplicationPath en la clase de aplicación junto con la anotación @Path en esta clase indica que el recurso está disponible en la ruta System/properties.
+
+``
+@Path("properties")
+public class PropertiesResource {
+``
+
+JAX-RS asigna los métodos HTTP de la URL a los métodos de la clase. El método de llamada se determina por las anotaciones especificadas en los métodos. En la aplicación que está construyendo, una petición HTTP GET a la ruta Sistema/propiedades da como resultado que las propiedades del sistema sean devueltas:
+
+``
+@GET
+@Produces(MediaType.APPLICATION_JSON)
+public JsonObject getProperties() {
+
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+
+    System.getProperties()
+          .entrySet()
+          .stream()
+          .forEach(entry -> builder.add((String)entry.getKey(),
+                                        (String)entry.getValue()));
+
+   return builder.build();
+}
+``
