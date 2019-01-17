@@ -4,9 +4,9 @@ En la era que estamos de contenedores, cloud y muchas herramientas que escoger e
 
 ## Requisitos:
 
-- Open JDK 8 o superior
-- Maven
-- El IDE de su preferencia
+- Open JDK 8 o superior.
+- Maven.
+- El IDE de su preferencia.
 - Un servidor de aplicaciones o distribucion de Microprofile en este caso para el taller vamos a utilizar OpenLiberty (https://openliberty.io). 
 - Docker (https://www.docker.com/get-started).
 
@@ -60,9 +60,11 @@ Vamos a encontrar dos carpetas:
 - start: Contiene un proyecto base con el que vamos a trabajar.
 - finish: Contiene el proyecto luego de realizar el laboratorio.
 
+Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
+
 ### Levantar Openliberty y correr una aplicacion Simple
 
-Vamos a crear una aplicacion JAX-RS desde 0 y aprederas las consideraciones principales para configurar una aplicacion sobre Open Liberty. 
+Ahora vamos a crear una aplicacion JAX-RS desde 0 y aprederas las consideraciones principales para configurar una aplicacion sobre Open Liberty. 
 
 ### Creando una aplicación Rest con JAX-RS 
 
@@ -249,35 +251,350 @@ Ahora vamos a dirigirnos al directorio lab02; donde vamos a encontrar dos carpet
 - start: Contiene un proyecto base con el que vamos a trabajar.
 - finish: Contiene el proyecto luego de realizar el laboratorio.
 
-Luego de entender la estructura de Openliberty y como crear una aplicacion simple con recursos REST, ahora vamos incluir a nuestra aplicacion la logica que que permitira el registro de participantes a nuestros hackday; para ello vamos a encontrar objetos que representen nuestro dominio de negocio:
-
-- JUGMember
-
-	- FullName
-	- Years of experiencias
-	- Comments
-
-- Hackday
-	- Title
-	- Description
-	- Date 
-	- Varios JUGMembers
-
-Y ahora vamos a exponer nuestros servicios REST usando JAX-RS y JSON-P que exponga un API para listar nuestros proximos hackdays, registrarse como miembro de un JUG y registrarse a un hackday.
+Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
 
 La estructura del proyecto debe verse como la siguiente:
-   └── src
-        ├── main
-        │  └── java
-        │  └── resources
-        │  └── webapp
-        │  └── liberty
-        │         └── config
-        └── test
-            └── java
+
+- api (Modulo que expone las interfaces de nuestro API de Negocio, haciendo uso de Plugin Framework for Java (PF4J) http://www.pf4j.org)
+- api-impl (Modulo que implementa las interfaces de nuestro API Rest)
+- application (Modulo que lanza nuestra aplicación monolitica en openliberty)
+- domain (Modulo que incluye el modelo de nuestro dominio de negocio)
+- mongito (Modulo que nos provee de Produce una Base NoSQL Mongo y MongoClient integrado)
+- pom.xml (Descriptor de nuestro proyecto)
+- repository (Modulo que implementa nuestro acceso y logica de nuestro modelo de negocio)
+
+Muchas personas van a pensar que la aplicacion esta sobre cargada o en ingles se conoce el concepto como "Over-architected"; pero atravez del taller vamos a ir explicando el por que la separacion de modulos y layers que nos permiten tener el codigo mas limpio y reusable en aplicaciones empresariales de gran magnitud. 
+
+Una vista de las capas logicas que tiene nuestra aplicacion se muestra a continuacion:
+
+-------------    -----   --------    -------------     -----------
+| APPLICATION|<->|API|<->API-IMPL|<->| REPOSITORY| <-> | MONGODB |
+-------------    -----   --------    -------------     -----------
+
+### Extendiendo nuestro modelo de negocio usando JPA y Lombok 
+
+Luego de entender la estructura de nuestro proyecto y haber ejecutado el lab01, donde hemos explorado Openliberty y como crear una aplicacion simple con recursos REST, ahora vamos incluir a nuestra aplicacion la logica que que permitira el registro de participantes a nuestros hackday; para ello vamos a encontrar objetos que representen nuestro dominio de negocio. 
+
+Vamos dirigirnos al modulo domain y encontraremos en el folder /start/domain/src/main/java/org/ecjug/hackday/domain/model las siguientes clases: 
+
+- Country.java
+- Event.java
+- Group.java
+
+Vamos a incluir al modelo la clase Member.java en el archivo /start/domain/src/main/java/org/ecjug/hackday/domain/model/Member.java:
+
+```
+package org.ecjug.hackday.domain.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
+
+import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
+
+@Builder(toBuilder = true)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public final class Member implements Serializable {
+
+    @JsonIgnore
+    private ObjectId id;
+    @NotBlank
+    private String name;
+    private String country;
+    private String city;
+    private String comments;
+
+    private String memberId;
+
+
+    public String getMemberId() {
+        if (id != null) {
+            memberId = id.toString();
+        }
+        return memberId;
+    }
+}
+
+
+```
+Vamos a denotar que estamos usando anotaciones que pertencen al proyecto Lombok (https://projectlombok.org/) el cual nos ayuda a tener nuestro codigo mas limpio ya que no vamos a encontrar metodos get, set, constructores o declaracion de loggers en nuestra aplicacion.
+
+### Creando la capa de acceso a datos a MongoDB 
+
+Ahora vamos a ir al modulo repository, donde vamos a crear la capa de acceso de nuestro nuevo modelo de Miembros de un grupo de usuarios; para ello vamos a crear el archivo /start/repository/src/main/java/org/ecjug/hackday/repository/impl/MemberRepositoryImpl.java:
+
+```
+package org.ecjug.hackday.repository.impl;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import org.bson.types.ObjectId;
+import org.ecjug.hackday.domain.model.Member;
+import org.ecjug.hackday.repository.MemberRepository;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import static com.mongodb.client.model.Filters.eq;
+
+@ApplicationScoped
+public class MemberRepositoryImpl implements MemberRepository {
+
+    @Inject
+    private MongoDatabase database;
+
+    private MongoCollection<Member> collection;
+
+    @Override
+    public Member add(Member member) {
+        Objects.requireNonNull(member, "Member can't be null");
+        member.setId(new ObjectId(new Date()));
+        dbCollection().insertOne(member);
+        return member;
+    }
+
+    @Override
+    public List<Member> memberByName(String name) {
+        Objects.requireNonNull(name, "Name can't be null");
+        return dbCollection().find(Filters.regex("name", name)).into(new ArrayList<>());
+    }
+
+    @Override
+    public Member byId(String id) {
+        return dbCollection().find(eq("_id", new ObjectId(id))).first();
+    }
+
+    @Override
+    public List<Member> list() {
+        List<Member> memberList = new ArrayList<>();
+        MongoCursor<Member> mongoCursor = dbCollection().find().iterator();
+        mongoCursor.forEachRemaining(memberList::add);
+        return memberList;
+    }
+
+
+    private MongoCollection<Member> dbCollection() {
+        if (this.collection == null) {
+            this.collection = this.database.getCollection("Member", Member.class);
+        }
+        return this.collection;
+    }
+}
+
+```
+
+Vamos a encontrar que esta implementacion de la interface MemberRepository, incluye inyeccion de dependencia para usar MongoDB como nuestro repositorio de datos (@Inject private MongoDatabase database;).
+
+### Creando nuestra capa de logica de negocio
+
+A continuacion vamos a ir al modulo api-impl, donde vamos a crear nuestra capa de logica de negocio para nuestro nuevo modelo de Miembros de un grupo de usuarios; para ello vamos a crear el archivo /start/api-impl/src/main/java/org/ecjug/hackday/api/impl/client/MembersServiceImpl.java:
+
+```
+package org.ecjug.hackday.api.impl.client;
+
+import lombok.extern.slf4j.Slf4j;
+import org.ecjug.hackday.api.MembersService;
+import org.ecjug.hackday.domain.model.Member;
+import org.ecjug.hackday.repository.MemberRepository;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
+
+@Slf4j
+@ApplicationScoped
+public class MembersServiceImpl implements MembersService {
+
+    @Inject
+    private MemberRepository memberRepository;
+
+    @Override
+    public List<Member> list() {
+        return memberRepository.list();
+    }
+
+    @Override
+    public Member add(Member member) {
+        return memberRepository.add(member);
+    }
+}
+
+```
+
+### Creando un nuevo recurso JAX-RS 
+
+Y ahora vamos a exponer nuestros servicios REST usando JAX-RS y JSON-P que exponga un API para listar nuestros miembros de un JUG; para esto vamos a ir al modulo application y crear el archivo /start/application/src/main/java/org/ecjug/hackday/app/resources/MemberResource.java:
+
+```
+package org.ecjug.hackday.app.resources;
+
+import org.ecjug.hackday.api.MembersService;
+import org.ecjug.hackday.domain.model.Member;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@ApplicationScoped
+@Produces({MediaType.APPLICATION_JSON})
+@Consumes(MediaType.APPLICATION_JSON)
+@Path("/member")
+public class MemberResource {
+
+    @Inject
+    private MembersService membersService;
+
+    @GET
+    @Path("/list")
+    public List<Member> listGroups() {
+        return membersService.list();
+    }
+
+    @POST
+    @Path("/add")
+    public Member addMember(Member member) {
+        return membersService.add(member);
+    }
+}
+```
+
+### Ejecutando nuestro servidor
 
 Para compilar la aplicacion podemos ejecutar:
 
 ``
 mvn install
 ``
+
+En consola vamos a ver que se ejecutan varias pruebas de unidad y de integracion hasta llegar a tener en consola:
+
+```
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] HackDay ::: Monolith Microlith Microservices ....... SUCCESS [  0.913 s]
+[INFO] HackDay ::: Mongo Embedded ......................... SUCCESS [ 10.139 s]
+[INFO] HackDay ::: Domain ................................. SUCCESS [  0.805 s]
+[INFO] HackDay ::: Repository ............................. SUCCESS [ 14.106 s]
+[INFO] HackDay ::: API .................................... SUCCESS [  0.112 s]
+[INFO] HackDay ::: API Implementation ..................... SUCCESS [ 26.412 s]
+[INFO] HackDay ::: Application ............................ SUCCESS [ 21.816 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 01:14 min
+[INFO] Finished at: 2019-01-11T13:30:26-05:00
+[INFO] Final Memory: 37M/137M
+[INFO] ------------------------------------------------------------------------
+
+```
+A continuación, podemos ejecutar nuestro servidor en el modulo application ejecutamos liberty:start-server:
+
+``
+mvn liberty:start-server
+``
+
+Este objetivo inicia una instancia de servidor Open Liberty. Su pom.xml de Maven ya está configurado para iniciar la aplicación en esta instancia de servidor.
+
+### Test de nuestro servicio
+
+Puede probar nuestro nuevo servicio manualmente iniciando el servidor y apuntando un navegador web a la URL de http://localhost:9080/ y vamos ver nuestra pagina de inicio de nuestra aplicacion de la siguiente manera:
+
+![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
+
+Y nuestro nuevo recurso que lista los miembros del grupo de usuarios en la siguiente URL http://localhost:9080/hackday/member/list que al momento no tiene ningun miembro.
+
+Para crear nuevos miembros podemos ejecutar en consola mediante el metodo post a la url http://localhost:9080/hackday/member/add
+
+Hemos terminado nuestro seegundo ejercicio de codigo; ahora vamos a pasar al laboratorio 3 donde incluiremos anotaciones del proyecto Microprofile.
+
+## Microprofile
+
+Eclipse MicroProfile es un conjunto modular de tecnologías diseñadas para que pueda escribir microservicios nativos de la nube en Java™. En la siguiente seccion de este taller vamos a incluir varias de las caracteristicas de MicroProfile que nos ayudaran a desarrollar y gestionar microservicios nativos de la nube.
+
+En nuestro proximo laboratorio incluiremos los siguientes APIs de Microprofile:
+
+![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/microprofile-que-aprenderemos.png)
+
+Este enfoque modular que buscamos en nuestros desarrollos hace que la aplicación sea fácil de entender, fácil de desarrollar, fácil de probar y fácil de mantener.
+
+## Laboratorio 3
+
+Ahora vamos a dirigirnos al directorio lab03; donde vamos a encontrar dos carpetas:
+
+- start: Contiene un proyecto base con el que vamos a trabajar e incluiremos anotaciones de varios de los modulos que nos provee microprofile.
+- finish: Contiene el proyecto luego de realizar el laboratorio.
+
+Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
+
+## Microlitos
+
+Muchas organizaciones y equipos de desarrollo en su intento de llegar a tener microservicios han terminado en una estilo de aplicaciones denominado Microlito. Muchos no estan familiarizados con el termino pero si han buscado el realizar Microservicios pero no cumplen caracteristicas como:
+
+- Resiliance
+- Scaling
+- Independent deployment
+- Your own schema
+- Accessing data through APIs
+
+En resumen muchas instituciones y empresas tienen un intento de realizar microservicios pero lo que hemos llegado es a tener nuestro Monolitos desplegados en contenedores y con dependencias a puntos unicos de falla.
+
+En esta seccion de nuestro taller vamos a desplegar nuestra aplicacion monolitica sobre contenedores sin incluir las caracteristicas que acabamos de mencionar en el concepto de Microlitos.
+
+### Docker file
+
+Vamos a incluir un archivo de despligue para contenedores docker en la raiz del proyecto creando el archivo "dockefile" con la el siguiente detalle:
+
+```
+FROM open-liberty
+
+RUN ln -s /opt/ol/wlp/usr/servers /servers
+
+ENTRYPOINT ["/opt/ol/wlp/bin/server", "run"]
+CMD ["defaultServer"]
+```
+
+## Microservicios
+
+"Microservicios" es la palabra de moda desde que Netflix la popularizo, es un patron de arquitectura que todos quieren tener, pero que pocos logran realizar. 
+
+Vamos a realizar varias caracteristicas que deben tener nuestras aplicaciones para poder llegar a tener microservicios:
+
+- Escalabilidad
+- Funcionalidad modular, módulos independientes.
+- Libertad del desarrollador de desarrollar y desplegar servicios de forma independiente
+- Uso de contenedores permitiendo el despliegue y el desarrollo de la aplicación rápidamente
+
+Para continuar con este patron y taller de implementacion vamos a cambiarnos de rama a: "microservicios".
+
+## Laboratorio 4
+
+Ahora vamos a dirigirnos al directorio lab04; donde vamos a encontrar dos carpetas:
+
+- start: Contiene un proyecto base con el que vamos a trabajar y lo vamos a dividir en microservicios.
+- finish: Contiene el proyecto luego de realizar el laboratorio.
+
+Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
+
+
+
+
+
+
+
+
+
+
