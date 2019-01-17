@@ -9,9 +9,6 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-/**
- * @author Kleber Ayala
- */
 @Health
 @ApplicationScoped
 @Slf4j

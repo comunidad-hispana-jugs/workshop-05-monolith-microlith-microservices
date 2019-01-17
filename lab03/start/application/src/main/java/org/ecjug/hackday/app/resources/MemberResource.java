@@ -14,9 +14,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-/**
- * @author Kleber Ayala
- */
 @ApplicationScoped
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes(MediaType.APPLICATION_JSON)
@@ -28,19 +25,13 @@ public class MemberResource {
 
     @GET
     @Path("/list")
-    @Counted(monotonic = true)
-    @Operation(summary = "List all Members")
     public List<Member> listGroups() {
         return membersService.list();
     }
 
     @POST
     @Path("/add")
-    @Counted(monotonic = true)
-    @Operation(summary = "Creates a new Member")
-    public Member addMember(@RequestBody(description = "Specify the values to create a new Member",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = Member.class))) Member member) {
+    public Member addMember( Member member) {
         return membersService.add(member);
     }
 }
