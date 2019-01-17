@@ -7,8 +7,8 @@ En la era que estamos de contenedores, cloud y muchas herramientas que escoger e
 - Open JDK 8 o superior
 - Maven
 - El IDE de su preferencia
-- Un servidor de aplicaciones o distribucion de Microprofile en este caso para el taller vamos a utilizar OpenLiberty (https://openliberty.io), para facilidad bajar la distribucion para su sistema operativo del siguiente link: 
-- Docker 
+- Un servidor de aplicaciones o distribucion de Microprofile en este caso para el taller vamos a utilizar OpenLiberty (https://openliberty.io). 
+- Docker (https://www.docker.com/get-started).
 
 Agradeceriamos tener listo los pre requisitos previo al inicio de la siguiente seccion. 
 
@@ -24,14 +24,14 @@ Open Liberty es un servidor de aplicaciones diseñado para la nube. Es pequeño,
 
 Maven es una herramienta de creación de automatización que proporciona una forma eficiente de desarrollar aplicaciones Java. Usando Maven, vamos construir nuestros servicios. A continuación, realizará la configuración del servidor y los cambios de código y verá cómo los recoge un servidor en ejecución. También explorará cómo empaquetar su aplicación con el tiempo de ejecución del servidor para que se pueda implementar en cualquier lugar de una sola vez. Finalmente, empaquetaremos la aplicación junto con la configuración del servidor en una imagen Docker y la ejecutará como un contenedor.
 
-### Notas:
+###Notas:
 
 El repositorio esta compuesto por un proyecto que puede ser desplegado como monolito, microlito o microservicios; ademas en los primeros laboratorios vamos a crear aplicaciones simples sin necesidad del codigo pre elaborado. El inicio del taller comienza con el archivo readme.md que contine un resumen del trabajo a realizar. 
 
 El repositorio esta compuesto por 4 carpetas:
 
 - lab01: Incluye nuestro primer taller con una aplicacion simple que expone un API rest del listado de grupos de usuarios Java participantes del Hackday. 
-- lab02: Incluye la estructura de nuestro proyecto que expone un API rest de administracion de los miembros y grupos de usuarios participantes del Hackday. 
+- lab02: Incluye la estructura de nuestro proyecto que expone un API rest de administracion de los miembros y grupos de usuarios participantes del Hackday, maneja persistencia usando mongo como base NoSQL. 
 - lab03: De igual maneera que la rama monotilo esta compuesta de dos folders start y finish.
 - lab04: Contiene el proyecto inicial para basarlo en microservicios y la carpeta finish el taller completo.
 
@@ -72,7 +72,7 @@ Vamos a crear un servicio simple responderia a las peticiones de GET a la ruta /
 
 Vamos a crear una clase de aplicación JAX-RS en el archivo src/main/java/org/ecjug/hackday/app/HackDayApplication.java:
 
-``
+```
 package org.ecjug.hackday.app;
 
 import javax.ws.rs.ApplicationPath;
@@ -82,7 +82,7 @@ import javax.ws.rs.core.Application;
 public class HackDayApplication extends Application {
 
 }
-``
+```
 
 La clase HackDayApplication extiende la clase Application, que a su vez asocia todas las clases de recursos JAX-RS del archivo WAR con esta aplicación JAX-RS, esta haciendo disponibles bajo la ruta común especificada en la clase HackDayApplication. La anotación @ApplicationPath tiene un valor que indica la ruta dentro de la WAR de la que la aplicación JAX-RS acepta peticiones, es decir (/hackday).
 
@@ -92,7 +92,7 @@ En JAX-RS, una sola clase debe representar un solo recurso o un grupo de recurso
 
 Vamos a crear la clase de recurso JAX-RS en la carpeta src/main/java/org/ecjug/hackday/app/resources/GroupResource.java:
 
-``
+```
 package org.ecjug.hackday.app.resources;
 
 import javax.json.Json;
@@ -121,7 +121,7 @@ public class GroupResource {
         return builder.build();
     }
 }
-``
+```
 
 
 La anotación @Path en la clase indica que este recurso responde a la ruta de propiedades en la aplicación JAX-RS. 
@@ -140,7 +140,7 @@ Convierta el Set a un Stream (nuevo en Java SE 8) llamando al método stream. La
 Para que el servicio funcione, el servidor de Liberty debe estar configurado correctamente.
 
 Vamos a editar el archivo src/main/liberty/config/server.xml y debe quedar de la siguiente manera:
-``
+```
 <server description="Laboratorio 01 Hackday Open Liberty Server">
 
   <featureManager>
@@ -153,7 +153,7 @@ Vamos a editar el archivo src/main/liberty/config/server.xml y debe quedar de la
 
   <webApplication location="application.war" contextRoot="${app.context.root}"/>
 </server>
-``
+```
 La configuración realiza las siguientes acciones:
 
 - Configura el servidor para soportar tanto JAX-RS como JSON-P. Esto se especifica en el elemento featureManager.
@@ -201,7 +201,7 @@ Las pruebas automatizadas son necesarias en nuestro dia a dia para evitar  falla
 
 Vamos a crear una clase de prueba en el archivo src/test/java/org/ecjug/hackday/app/rest/GroupRestTest.java:
 
-``
+```
 package org.ecjug.hackday.app.rest;
 
 import static org.junit.Assert.assertEquals;
@@ -236,10 +236,48 @@ public class GroupRestTest {
         response.close();
     }
 }
-``
+```
 
 Esta clase de prueba tiene más líneas de código que la implementación del recurso. Esta situación es común. El método de prueba se indica con la anotación @Test. El código de prueba necesita saber alguna información sobre la aplicación para poder hacer solicitudes. El puerto del servidor y la raíz del contexto de la aplicación son clave, y están dictados por la configuración del servidor. 
 
 Hemos terminado nuestro primer ejercicio de codigo; ahora vamos a pasar al laboratorio 2.
 
 ## Laboratorio 2
+
+Ahora vamos a dirigirnos al directorio lab02; donde vamos a encontrar dos carpetas:
+
+- start: Contiene un proyecto base con el que vamos a trabajar.
+- finish: Contiene el proyecto luego de realizar el laboratorio.
+
+Luego de entender la estructura de Openliberty y como crear una aplicacion simple con recursos REST, ahora vamos incluir a nuestra aplicacion la logica que que permitira el registro de participantes a nuestros hackday; para ello vamos a encontrar objetos que representen nuestro dominio de negocio:
+
+- JUGMember
+
+	- FullName
+	- Years of experiencias
+	- Comments
+
+- Hackday
+	- Title
+	- Description
+	- Date 
+	- Varios JUGMembers
+
+Y ahora vamos a exponer nuestros servicios REST usando JAX-RS y JSON-P que exponga un API para listar nuestros proximos hackdays, registrarse como miembro de un JUG y registrarse a un hackday.
+
+La estructura del proyecto debe verse como la siguiente:
+   └── src
+        ├── main
+        │  └── java
+        │  └── resources
+        │  └── webapp
+        │  └── liberty
+        │         └── config
+        └── test
+            └── java
+
+Para compilar la aplicacion podemos ejecutar:
+
+``
+mvn install
+``
