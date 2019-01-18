@@ -911,6 +911,17 @@ Podemos ver la documentacion de nuestros APIs corriendo en las URLs:
 - http://localhost:9080/openapi/ui/
 - http://localhost:9081/openapi/ui/
 
+O las paginas de inicio de cada una de nuestras aplicaciones en las URLs:
+
+- http://localhost:9080/
+
+![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
+
+- http://localhost:9081/
+
+![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage2.png)
+
+
 Hemos terminado nuestro cuarto ejercicio de codigo; hemos pasado por el concepto de Monolito, Microlitos y Microservicios; agradecemos su interes y participacion. 
 
 # Agradecimientos
