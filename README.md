@@ -790,10 +790,10 @@ docker images
 
 En consola vamos a encontrar nuestra imagen creada en el momento que compilamos nuestro proyecto de la siguiente manera:
 
-``
+```
 REPOSITORY                                TAG                 IMAGE ID            CREATED             SIZE
 application                               1.0.0-SNAPSHOT      32dcf8b6bc25        11 minutes ago      538MB
-``
+```
 
 En consola para ejecutar nuestro contenedor podemos ejecutar (verificar el IMAGE ID al listar el comando anterior):
 
@@ -835,16 +835,92 @@ No vamos a entrar en la definicion teorica de Microservicios; y vamos a tomar nu
 
 Ahora vamos a dirigirnos al directorio lab04; donde vamos a encontrar dos carpetas:
 
-- start: Contiene un proyecto base con el que vamos a trabajar y lo vamos a dividir en microservicios o podemos usar si concluimos nuestra lab03 el mismo proyecto para dividirlo en modulos y despliegarlo haciendo uso de docker compose.
+- start: Contiene un proyecto base con el que vamos a trabajar y lo vamos a dividir en microservicios que se basa en nuestra aplicacion terminada del lab03; para dividirlo en modulos y despliegarlo haciendo uso de docker compose.
 
 - finish: Contiene el proyecto luego de realizar el laboratorio.
 
 Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
 
+## Separar el API de Miembros de JUGs
+
+Vamos a mover nuestro API de miembros especificamente el archivo /application/src/main/java/org/ecjug/hackday/app/resources/MemberResource.java a una nueva aplicacion al archivo /member-application/src/main/java/org/ecjug/member/app/resource/MemberResource.java
+
+Es decir; en nuestro modulo application ya no tendra el archivo /application/src/main/java/org/ecjug/hackday/app/resources/MemberResource.java y estara en un nuevo modulo denominado member-application.
+
+
+## Cambio en nuestra capa de logica de negocio
+
+Ahora vamos a realizar un refactor de nuestro modulo api-impl donde haciamos uso de miembros de usuario; en el archivo /api-impl/src/main/java/org/ecjug/hackday/api/impl/client/GroupServiceImpl.java
+
+Vamos a cambiar en lugar de usar el repositorio de private MemberRepository memberRepository; vamos incluir el Rest Client de miembros de usuarios:
+
+```
+@Inject
+    @RestClient //RestClient with injection
+    private CountryApi countryApi;
+```
+
+Y los metodos donde usabamos el repositorio ahora hacen uso del servicios de la siguiente manera:
+
+```
+@Override
+    @Metered
+    public List<Member> loadMembersFromMeetUpGroup(Group group) {
+        List<HashMap> membersFromMeetUp = meetUpApi().members(group.getUrlname());
+        List<Member> memberList = toMemberList(membersFromMeetUp);
+        memberList.forEach(memberApi::add);
+        group.setMembersList(memberList);
+        groupRepository.update(group);
+        return memberList;
+    }
+
+    @Override
+    @Metered
+    public void addMemberToGroup(String groupId, Member member) {
+        final Member memberFromDB = memberApi.add(member);
+        Optional<Group> groupOptional = groupRepository.byId(groupId);
+        groupOptional.ifPresent(group -> {
+            group.addMember(memberFromDB);
+            groupRepository.update(group);
+        });
+    }
+
+```
 
 
 
 
+### Compilar nuestras aplicaciones
+
+Para compilar nuestras aplicaciones podemos ejecutar en la raiz del proyecto:
+
+``
+mvn install
+``
+
+### Ejecutando con docker compose
+
+Al momento de compilar la aplicacion denotamos una demora; que tenia que ver con la creacion de las imagenes de nuestros servidorer openliberty; para ejecutar las imagenes creadas usando docker compose en consola podemos ejecutar: 
+
+``
+docker-compose up
+``
+
+Podemos ver la documentacion de nuestros APIs corriendo en las URLs:
+
+- http://localhost:9080/openapi/ui/
+- http://localhost:9081/openapi/ui/
+
+Hemos terminado nuestro cuarto ejercicio de codigo; hemos pasado por el concepto de Monolito, Microlitos y Microservicios; agradecemos su interes y participacion. 
+
+# Agradecimientos
+
+Conoce un poco mas de los autores de estos talleres siguiendo en twitter a:
+
+- [Alberto Salazar](https://twitter.com/betoSalazar)
+- [Kleber Ayala](https://twitter.com/keal_)
+
+Miembros fundadores del Grupo de Usuarios Java del Ecuador [EcuadorJug](https://twitter.com/EcuadorJUG)
 
 
 

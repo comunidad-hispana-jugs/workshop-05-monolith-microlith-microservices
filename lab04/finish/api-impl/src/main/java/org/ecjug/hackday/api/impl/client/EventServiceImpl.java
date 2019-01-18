@@ -11,9 +11,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
 
-/**
- * @author Kleber Ayala
- */
 @Slf4j
 @ApplicationScoped
 public class EventServiceImpl implements EventService {
