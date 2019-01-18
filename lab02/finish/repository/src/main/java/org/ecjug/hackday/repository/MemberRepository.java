@@ -16,4 +16,6 @@ public interface MemberRepository {
     Member byId(String id);
 
     List<Member> list();
+
+    void update(Member member);
 }
