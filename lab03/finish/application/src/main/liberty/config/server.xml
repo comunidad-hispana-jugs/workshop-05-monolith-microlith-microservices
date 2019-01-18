@@ -14,7 +14,7 @@
     </featureManager>
 
     <quickStartSecurity userName="admin" userPassword="password"/>
-    <keyStore id="defaultKeyStore" password="mpKeystore" location="key.jks"/>
+    <keyStore id="defaultKeyStore" password="mpKeystore"/>
 
     <httpEndpoint httpPort="${default.http.port}" httpsPort="${default.https.port}" id="defaultHttpEndpoint" host="*"/>
     <applicationManager autoExpand="true"/>

@@ -197,6 +197,21 @@
                 <executions>
                     <execution>
                         <id>copy-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/liberty/wlp/usr/servers/defaultServer/resources/security</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/security/</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-docker</id>
                         <phase>install</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -205,8 +220,7 @@
                             <outputDirectory>${basedir}/target/liberty/wlp/usr/servers/defaultServer/resources/security</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>src/main/security</directory>
-                                    <filtering>true</filtering>
+                                    <directory>src/main/security/</directory>
                                 </resource>
                             </resources>
                         </configuration>
