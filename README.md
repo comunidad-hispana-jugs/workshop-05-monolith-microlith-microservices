@@ -821,16 +821,27 @@ En resumen muchas instituciones y empresas tienen un intento de realizar microse
 
 ## Microservicios
 
-"Microservicios" es la palabra de moda desde que Netflix la popularizo, es un patron de arquitectura que todos quieren tener, pero que pocos logran realizar. 
+"Microservicios" es la palabra de moda desde que Netflix la popularizo, es un patron de arquitectura que todos quieren tener, pero que pocos logran realizar. Como citamos en la definicion de Microlitos es facil verificar que llegamos a cumplir este patron y tiene que ver principalmente con responder a las caractericas que acabamos de citar; es decir:
+
+- Resiliance
+- Scaling
+- Independent deployment
+- Your own schema
+- Accessing data through APIs
+
+No vamos a entrar en la definicion teorica de Microservicios; y vamos a tomar nuestro caso practico donde vamos imaginar que por el alto uso de nuestra aplicacion y nuestro equipo de desarrollo a escalado en tamaño ya que hemos tenido exito con nuestra aplicacion de registro de eventos de miembros de usuarios java necesitamos dividirla en microservicios. 
 
 ## Laboratorio 4
 
 Ahora vamos a dirigirnos al directorio lab04; donde vamos a encontrar dos carpetas:
 
-- start: Contiene un proyecto base con el que vamos a trabajar y lo vamos a dividir en microservicios.
+- start: Contiene un proyecto base con el que vamos a trabajar y lo vamos a dividir en microservicios o podemos usar si concluimos nuestra lab03 el mismo proyecto para dividirlo en modulos y despliegarlo haciendo uso de docker compose.
+
 - finish: Contiene el proyecto luego de realizar el laboratorio.
 
 Vamos a ir al directorio start y podemos importarlo en el IDE de su preferencia como proyecto maven.
+
+
 
 
 
