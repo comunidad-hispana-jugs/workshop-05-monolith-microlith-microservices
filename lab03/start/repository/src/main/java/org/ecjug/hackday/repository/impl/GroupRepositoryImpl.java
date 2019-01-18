@@ -3,6 +3,8 @@ package org.ecjug.hackday.repository.impl;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.ecjug.hackday.domain.model.Group;
 import org.ecjug.hackday.repository.GroupRepository;
@@ -14,6 +16,7 @@ import java.util.*;
 import static com.mongodb.client.model.Filters.eq;
 
 @ApplicationScoped
+@Slf4j
 public class GroupRepositoryImpl implements GroupRepository {
 
     @Inject
@@ -24,8 +27,16 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group add(Group group) {
         Objects.requireNonNull(group, "Group can't be null");
-        group.setId(new ObjectId(new Date()));
-        dbCollection().insertOne(group);
+        Optional<Group> optionalGroup = byUrlname(group.getUrlname());
+        if (optionalGroup.isPresent()) {
+            log.warn("Group " + group.getName() + " is already registered, updating it!");
+            group.setId(optionalGroup.get().getId());
+            update(group);
+        } else {
+            group.setId(new ObjectId(new Date()));
+            dbCollection().insertOne(group);
+        }
+
         return group;
     }
 
@@ -47,6 +58,19 @@ public class GroupRepositoryImpl implements GroupRepository {
     public void update(Group group) {
         Objects.requireNonNull(group, "Group can't be null");
         dbCollection().replaceOne(eq("_id", group.getId()), group);
+    }
+
+    @Override
+    public Optional<Group> byUrlname(String urlname) {
+        Objects.requireNonNull(urlname, "Urlname can't be null");
+        Optional<Group> optionalGroup;
+        List<Group> groupList = dbCollection().find(Filters.regex("urlname", urlname)).into(new ArrayList<>());
+        if (groupList.isEmpty()) {
+            optionalGroup = Optional.empty();
+        } else {
+            optionalGroup = Optional.of(groupList.get(0));
+        }
+        return optionalGroup;
     }
 
     private MongoCollection<Group> dbCollection() {

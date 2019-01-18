@@ -27,7 +27,7 @@ public class MemberResource {
     @Path("/list")
     @Counted(monotonic = true)
     @Operation(summary = "List all Members")
-    public List<Member> listGroups() {
+    public List<Member> listMembers() {
         return membersService.list();
     }
 

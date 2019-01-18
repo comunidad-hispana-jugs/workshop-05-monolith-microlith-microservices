@@ -66,6 +66,7 @@
 
 
         <maven-war-plugin.version>3.2.2</maven-war-plugin.version>
+        <dockerfile-maven-plugin.version>1.4.10</dockerfile-maven-plugin.version>
     </properties>
 
 

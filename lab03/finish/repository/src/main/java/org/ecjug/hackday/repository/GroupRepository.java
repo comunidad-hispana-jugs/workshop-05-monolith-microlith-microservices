@@ -14,4 +14,6 @@ public interface GroupRepository {
     Optional<Group> byId(String groupId);
 
     void update(Group group);
+
+    Optional<Group> byUrlname(String urlname);
 }

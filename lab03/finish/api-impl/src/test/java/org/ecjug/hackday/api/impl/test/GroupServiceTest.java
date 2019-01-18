@@ -6,6 +6,7 @@ import com.kumuluz.ee.common.runtime.EeRuntimeInternal;
 import com.kumuluz.ee.configuration.utils.ConfigurationImpl;
 import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
 import com.kumuluz.ee.fault.tolerance.config.IsEnabledConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.ecjug.hackday.api.GroupService;
 import org.ecjug.hackday.domain.model.Group;
 import org.ecjug.hackday.domain.model.Member;
@@ -29,7 +30,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-
+@Slf4j
 public class GroupServiceTest {
 
     @Rule
@@ -37,12 +38,12 @@ public class GroupServiceTest {
 
     private Group ecGroup = Group.builder().
             link("https://www.meetup.com/ecuadorjug").
-            country("EC").
+            country("EC").urlname("ecuadorjug").
             name("EcuadorJUG").urlname("ecuadorjug").build();
 
     private Group medellinGroup = Group.builder().
             link("https://medellinjug.org").
-            country("CO").
+            country("CO").urlname("medejinjug").
             name("Medellin").build();
 
     @Inject
@@ -65,7 +66,6 @@ public class GroupServiceTest {
 
     @Test
     public void shouldAddJugsTest() {
-
 
         Group addedGroup = groupService.add(ecGroup);
 

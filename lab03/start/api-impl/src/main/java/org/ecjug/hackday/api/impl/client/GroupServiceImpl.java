@@ -20,10 +20,14 @@ import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.pf4j.Extension;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,23 +42,17 @@ public class GroupServiceImpl implements GroupService {
 
     @Inject
     private GroupRepository groupRepository;
-
     @Inject
     private MemberRepository memberRepository;
-
     @Inject
     @RestClient //RestClient with injection
     private CountryApi countryApi;
-
     @Inject
     @ConfigProperty(name = "meetup.url", defaultValue = "https://api.meetup.com")
     private String meetUpApiUrl;
-
     @Inject
     @ConfigProperty(name = "meetup.key")
     private String meetUpApiKey;
-
-
     private Client restClient;
 
     @Override
@@ -99,7 +97,6 @@ public class GroupServiceImpl implements GroupService {
         return memberList;
     }
 
-
     @Override
     @Metered
     public void addMemberToGroup(String groupId, Member member) {
@@ -116,7 +113,6 @@ public class GroupServiceImpl implements GroupService {
     public Optional<Group> byId(String groupId) {
         return groupRepository.byId(groupId);
     }
-
 
     /**
      * FallBack on Error
@@ -164,5 +160,41 @@ public class GroupServiceImpl implements GroupService {
         return RestClientBuilder.newBuilder().baseUrl(apiUrl()).build(MeetUpApi.class);
     }
 
+    @PostConstruct
+    public void sslHack() {
+        try {
+            //this is a hack to enable untrusted ssl handshake,
+            //metrics use a secure connection, and we are enabling it
+            //with  <quickStartSecurity userName="admin" userPassword="password"/>
+            //    <keyStore id="defaultKeyStore" password="mpKeystore"/>
+            // on server.xml
 
+            SSLContext sslcontext = SSLContext.getInstance("TLS");
+            sslcontext.init(null, new TrustManager[]{new X509TrustManager() {
+                public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+                }
+
+                public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+                }
+
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            }}, new java.security.SecureRandom());
+
+            HostnameVerifier allowAll = new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+
+            HttpsURLConnection
+                    .setDefaultSSLSocketFactory(sslcontext.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(allowAll);
+        } catch (Exception e) {
+            log.error("Errorr-->", e);
+        }
+    }
 }

@@ -25,13 +25,13 @@ public class MemberResource {
 
     @GET
     @Path("/list")
-    public List<Member> listGroups() {
+    public List<Member> listMembers() {
         return membersService.list();
     }
 
     @POST
     @Path("/add")
-    public Member addMember( Member member) {
+    public Member addMember(Member member) {
         return membersService.add(member);
     }
 }

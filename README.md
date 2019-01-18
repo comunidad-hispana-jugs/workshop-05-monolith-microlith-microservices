@@ -2,7 +2,6 @@
 
 En la era que estamos de contenedores, cloud y muchas herramientas que escoger en el momento de crear nuevas aplicaciones o evolucionar las que tenemos; presentamos tips y hacemos enfasis en patrones y practicas elementales que aplican en nuestro dia a dia de desarrollo de aplicaciones empresariales.  A travez de este taller de 2 horas vamos a crear una aplicacion desde pasando de Monolitica a Microlitica y finalmente Microservicios.
 
-
 ##  Canal de slack para comunicacion durante el HackDay
 https://join.slack.com/t/comunidad-jugs/shared_invite/enQtNDAyNzEzNTUzNTEwLWIyN2I2N2U2NWNjMDkxMWI3Njk1NDJkZTU2NDU1MDBlYWNmNzRhNTRiMWJkZGYxNWU1ZTEzMTQ2NDUyZjVmYWQ
 
@@ -195,6 +194,13 @@ A continuación, ejecute el objetivo de Maven liberty:start-server:
 ``
 mvn liberty:start-server
 ``
+
+Para parar el servidor podemos ejecutar:
+
+``
+mvn liberty:stop-server
+``
+
 
 Este objetivo inicia una instancia de servidor Open Liberty. Su pom.xml de Maven ya está configurado para iniciar la aplicación en esta instancia de servidor.
 
@@ -514,6 +520,13 @@ A continuación, podemos ejecutar nuestro servidor en el modulo application ejec
 mvn liberty:start-server
 ``
 
+Para parar el servidor podemos ejecutar:
+
+``
+mvn liberty:stop-server
+``
+
+
 ### Test de nuestro servicio
 
 Puede probar nuestro nuevo servicio manualmente iniciando el servidor y apuntando un navegador web a la URL de http://localhost:9080/ y vamos ver nuestra pagina de inicio de nuestra aplicacion de la siguiente manera:
@@ -607,7 +620,13 @@ La anotacion @Counted nos provee un contador es un simple incremento y disminuci
 @Counted(monotonic = true)
 ``
 
-Luego de complementar las demas caracteristicas de Microprofile que estamos incorporando a nuestro proyecto podremos verificar las metricas de nuestros metodos accediendo en el browser a la URL: https://localhost:9080/metrics 
+Luego de complementar las demas caracteristicas de Microprofile que estamos incorporando a nuestro proyecto podremos verificar las metricas de nuestros metodos accediendo en el browser a la URL: https://localhost:9443/metrics 
+
+Donde nos va a pedir el user y password que definimos en nuestro server.xml del proyecto application:
+
+![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/loginmetrics.png)
+
+Con ello verificaremos las metricas que nos provee Microprofile.
 
 ### Microprofile Open Api
 
@@ -656,7 +675,7 @@ public class MemberResource {
     @Path("/list")
     @Counted(monotonic = true)
     @Operation(summary = "List all Members")
-    public List<Member> listGroups() {
+    public List<Member> listMembers() {
         return membersService.list();
     }
 
@@ -696,7 +715,7 @@ CircuitBreaker: Ofrece una forma de fallar rápidamente al fallar la ejecución 
 A continuacion vamos a implementar en nuestro proyecto algunas de estas caracteristicas; para esto vamos a ir al archivo /start/api-impl/src/main/java/org/ecjug/hackday/api/impl/client/GroupServiceImpl.java especificamente al metodo loadFromMeetUp:
 
 ```
-@Override
+    @Override
     @Metered //measuring the rate of events over time
     @Timed(name = "loadFromMeetUpTime") //measures how long a method or block of code takes to execute
     @CircuitBreaker
@@ -709,7 +728,6 @@ A continuacion vamos a implementar en nuestro proyecto algunas de estas caracter
         groupList.forEach(this::add);
         return groupList;
     }
-
 ```
 
 Vamos a encontrar en nuestro metodo la aplicacion de @Timed, @CircuitBreaker, @Retry y @Fallback. Te invitamos a analizar cada una de ellas y discutir donde podemos aplicarlas en nuestro dia a dia como desarrolladores; adicional puedes verificar nuestro test de esta capa de negocio donde puedes verificar el comportamiento de cada una de estas caracteristicas de Microprofile en el archivo /start/api-impl/src/test/java/org/ecjug/hackday/api/impl/test/GroupServiceTest.java
@@ -755,11 +773,41 @@ A continuación, podemos ejecutar nuestro servidor en el modulo application ejec
 mvn liberty:start-server
 ``
 
+Para parar el servidor podemos ejecutar:
+
+``
+mvn liberty:stop-server
+``
+
+
+### Ejecutando como docker container
+
+Al momento de compilar la aplicacion denotamos una demora; que tenia que ver con la creacion de la imagen de nuestro servidor openliberty; para ejecutar la imagen creada en consola podemos ver el id con el que se creo ejecutando: 
+
+``
+docker images
+``
+
+En consola vamos a encontrar nuestra imagen creada en el momento que compilamos nuestro proyecto de la siguiente manera:
+
+``
+REPOSITORY                                TAG                 IMAGE ID            CREATED             SIZE
+application                               1.0.0-SNAPSHOT      32dcf8b6bc25        11 minutes ago      538MB
+``
+
+En consola para ejecutar nuestro contenedor podemos ejecutar (verificar el IMAGE ID al listar el comando anterior):
+
+``
+docker run -d --name hack-hay-app -p 9080:9080 -p 9443:9443 32dcf8b6bc25
+``
+
 Hemos terminado nuestro tercer ejercicio de codigo; ahora vamos a pasar al laboratorio 4 donde simularemos el que nuestra aplicacion a crecido y vamos a separarla en Microservicios ya que al momento hemos estado trabajando en el concepto de Monolito o como la mayoria de organizaciones terminan con Microlitos.
 
 ## Microlitos
 
-Muchas organizaciones y equipos de desarrollo en su intento de llegar a tener microservicios han terminado en una estilo de aplicaciones denominado Microlito. Muchos no estan familiarizados con el termino pero si han buscado el realizar Microservicios pero no cumplen caracteristicas como:
+Muchas organizaciones y equipos de desarrollo en su intento de llegar a tener microservicios han terminado en una estilo de aplicaciones denominado Microlito. 
+
+Muchos no estan familiarizados con el termino; pero si han buscado el realizar Microservicios pero no cumplen caracteristicas como:
 
 - Resiliance
 - Scaling
@@ -767,20 +815,13 @@ Muchas organizaciones y equipos de desarrollo en su intento de llegar a tener mi
 - Your own schema
 - Accessing data through APIs
 
-En resumen muchas instituciones y empresas tienen un intento de realizar microservicios pero lo que hemos llegado es a tener nuestro Monolitos desplegados en contenedores y con dependencias a puntos unicos de falla.
+Han llegado a tener un Microlito en lugar de Microservicios.
 
-En esta seccion de nuestro taller vamos a desplegar nuestra aplicacion monolitica sobre contenedores sin incluir las caracteristicas que acabamos de mencionar en el concepto de Microlitos.
+En resumen muchas instituciones y empresas tienen un intento de realizar microservicios pero lo que hemos llegado es a tener nuestro Monolitos desplegados en contenedores y con dependencias a puntos unicos de falla.
 
 ## Microservicios
 
 "Microservicios" es la palabra de moda desde que Netflix la popularizo, es un patron de arquitectura que todos quieren tener, pero que pocos logran realizar. 
-
-Vamos a realizar varias caracteristicas que deben tener nuestras aplicaciones para poder llegar a tener microservicios:
-
-- Escalabilidad
-- Funcionalidad modular, módulos independientes.
-- Libertad del desarrollador de desarrollar y desplegar servicios de forma independiente
-- Uso de contenedores permitiendo el despliegue y el desarrollo de la aplicación rápidamente
 
 ## Laboratorio 4
 

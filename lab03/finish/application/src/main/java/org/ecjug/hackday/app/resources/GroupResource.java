@@ -39,7 +39,7 @@ public class GroupResource {
         if (groupList.isEmpty()) {
             jsonResponse = friendlyResponse("At the moment is not possible to load groups, working with fallback");
         } else {
-            jsonResponse = friendlyResponse("Loaded " + groupList.size() + " groups from meetup");
+            jsonResponse = friendlyResponse("Loaded or updated " + groupList.size() + " groups from meetup");
         }
         return Response.ok(jsonResponse).build();
     }

@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.ecjug.hackday.domain.model.Member;
 import org.ecjug.hackday.repository.MemberRepository;
@@ -18,6 +19,7 @@ import java.util.Objects;
 import static com.mongodb.client.model.Filters.eq;
 
 @ApplicationScoped
+@Slf4j
 public class MemberRepositoryImpl implements MemberRepository {
 
     @Inject
@@ -27,9 +29,24 @@ public class MemberRepositoryImpl implements MemberRepository {
     @Override
     public Member add(Member member) {
         Objects.requireNonNull(member, "Member can't be null");
-        member.setId(new ObjectId(new Date()));
-        dbCollection().insertOne(member);
+        List<Member> memberList = memberByName(member.getName());
+        if (memberList.isEmpty()) {
+            member.setId(new ObjectId(new Date()));
+            dbCollection().insertOne(member);
+        } else {
+            log.warn("Member " + member.getName() + " is already registered, updating it!");
+            Member current = memberList.get(0);
+            member.setId(current.getId());
+            update(member);
+        }
+
         return member;
+    }
+
+    @Override
+    public void update(Member member) {
+        Objects.requireNonNull(member, "Member can't be null");
+        dbCollection().replaceOne(eq("_id", member.getId()), member);
     }
 
     @Override

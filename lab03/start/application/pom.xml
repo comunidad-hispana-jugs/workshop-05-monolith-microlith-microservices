@@ -106,6 +106,7 @@
             <scope>test</scope>
         </dependency>
 
+
         <!--test -->
     </dependencies>
 
@@ -118,6 +119,7 @@
                 <version>${maven-war-plugin.version}</version>
                 <configuration>
                     <packagingExcludes>pom.xml</packagingExcludes>
+                    <warName>${project.artifactId}</warName>
                 </configuration>
             </plugin>
             <plugin>
@@ -131,9 +133,10 @@
                         <version>RELEASE</version>
                         <type>zip</type>
                     </assemblyArtifact>
-                    <serverName>${project.artifactId}Server</serverName>
+                    <serverName>defaultServer</serverName>
                     <stripVersion>true</stripVersion>
                     <configFile>src/main/liberty/config/server.xml</configFile>
+
                     <packageFile>${package.file}</packageFile>
                     <include>${packaging.type}</include>
                     <bootstrapProperties>
@@ -188,7 +191,51 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/liberty/wlp/usr/servers/defaultServer/resources/security</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/security</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+             <plugin>
+                 <groupId>com.spotify</groupId>
+                 <artifactId>dockerfile-maven-plugin</artifactId>
+                 <version>${dockerfile-maven-plugin.version}</version>
+                 <executions>
+                     <execution>
+                         <phase>install</phase>
+                         <id>default</id>
+                         <goals>
+                             <goal>build</goal>
+                             <goal>tag</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+                 <configuration>
+                     <repository>${project.artifactId}</repository>
+                     <tag>${project.version}</tag>
+                     <useMavenSettingsForAuth>false</useMavenSettingsForAuth>
+                     <googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>
+                 </configuration>
+             </plugin>
         </plugins>
     </build>
+
 
 </project>
