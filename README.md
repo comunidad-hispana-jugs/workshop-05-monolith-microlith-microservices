@@ -531,7 +531,7 @@ mvn liberty:stop-server
 
 Puede probar nuestro nuevo servicio manualmente iniciando el servidor y apuntando un navegador web a la URL de http://localhost:9080/ y vamos ver nuestra pagina de inicio de nuestra aplicacion de la siguiente manera:
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
 
 Y nuestro nuevo recurso que lista los miembros del grupo de usuarios en la siguiente URL http://localhost:9080/hackday/member/list que al momento no tiene ningun miembro.
 
@@ -545,7 +545,7 @@ Eclipse MicroProfile es un conjunto modular de tecnologías diseñadas para que 
 
 En nuestro proximo laboratorio incluiremos los siguientes APIs de Microprofile:
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/microprofile-que-aprenderemos.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/microprofile-que-aprenderemos.png)
 
 Este enfoque modular que buscamos en nuestros desarrollos hace que la aplicación sea fácil de entender, fácil de desarrollar, fácil de probar y fácil de mantener.
 
@@ -624,7 +624,7 @@ Luego de complementar las demas caracteristicas de Microprofile que estamos inco
 
 Donde nos va a pedir el user y password que definimos en nuestro server.xml del proyecto application:
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/loginmetrics.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/loginmetrics.png)
 
 Con ello verificaremos las metricas que nos provee Microprofile.
 
@@ -694,7 +694,7 @@ public class MemberResource {
 
 Luego de complementar las demas caracteristicas de Microprofile que estamos incorporando a nuestro proyecto podremos verificar el la documentacion de nuestro API accediendo en el browser a la URL: http://localhost:9080/openapi/ui/ y tendremos como resultado:
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/openapi.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/openapi.png)
 
 ### Microprofile Fault Tolerance
 
@@ -915,11 +915,11 @@ O las paginas de inicio de cada una de nuestras aplicaciones en las URLs:
 
 - http://localhost:9080/
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage.png)
 
 - http://localhost:9081/
 
-![alt text](https://github.com/lasalazarr/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage2.png)
+![alt text](https://github.com/comunidad-hispana-jugs/workshop-05-monolith-microlith-microservices/blob/master/images/launchPage2.png)
 
 
 Hemos terminado nuestro cuarto ejercicio de codigo; hemos pasado por el concepto de Monolito, Microlitos y Microservicios; agradecemos su interes y participacion. 
